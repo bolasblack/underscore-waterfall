@@ -1,0 +1,24 @@
+{
+  "name": "underscore.waterfall",
+  "version": "0.0.1",
+  "description": "add _.waterfall",
+  "main": "",
+  "scripts": {
+    "test": "make test"
+  },
+  "repository": "",
+  "keywords": [
+    "underscore", "waterfall"
+  ],
+  "author": "c4605 (bolasblack@gmail.com)",
+  "license": "MIT",
+  "engines": {
+    "node": ">= 0.6.0"
+  },
+  "devDependencies": {
+    "coffee-script": "~1.3.3",
+    "grunt": "~0.4.0a",
+    "grunt-cli": "~0.1.1",
+    "grunt-mocha": "https://github.com/kmiyashiro/grunt-mocha/tarball/master"
+  }
+}
