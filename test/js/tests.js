@@ -16,114 +16,69 @@
 
   describe("the underscore waterfall plugin", function() {
     beforeEach(function() {
-      var wffn,
-        _this = this;
-      this.wffnSpy = sinon.spy();
-      wffn = function() {
-        var args, callback, err, _i;
-        err = arguments[0], args = 3 <= arguments.length ? __slice.call(arguments, 1, _i = arguments.length - 1) : (_i = 1, []), callback = arguments[_i++];
-        _this.wffnSpy();
-        return callback.apply(null, [err].concat(__slice.call(args)));
-      };
-      return this._wffn = _(wffn).waterfall();
+      var _this = this;
+      this.doneSpy = sinon.spy();
+      this.anywaySpy1 = sinon.spy();
+      _.waterfall(function(arg1, callback) {
+        _this.originalArg = arg1;
+        return callback(null, "some args");
+      }).then(function(arg1, callback) {
+        _this.thenFn1Arg = arg1;
+        return callback(null, "args1", "args2");
+      }).then(function(arg1, arg2, callback) {
+        _this.thenFn2Arg1 = arg1;
+        _this.thenFn2Arg2 = arg2;
+        return callback(null, "some other args");
+      }).then("straight", "passin", "arguments").then(function(arg1, arg2, arg3, callback) {
+        _this.thenFn4Arg1 = arg1;
+        _this.thenFn4Arg2 = arg2;
+        _this.thenFn4Arg3 = arg3;
+        return callback();
+      }).done(function() {
+        var args;
+        args = 1 <= arguments.length ? __slice.call(arguments, 0) : [];
+        _this.doneArgs = args;
+        return _this.doneSpy.apply(_this, args);
+      }).anyway(this.anywaySpy1)("first function args");
+      this.failSpy = sinon.spy();
+      this.anywaySpy2 = sinon.spy();
+      return _.waterfall(function(callback) {
+        return callback();
+      }).then().then(function(callback) {
+        _this.thenFn5Called = true;
+        return callback();
+      }).then(function(callback) {
+        return callback("some error message", "other", "args");
+      }).fail(this.failSpy).anyway(this.anywaySpy2)();
     });
     return describe("the waterfall method", function() {
-      it("should exist", function() {
-        return _.should.have.property("waterfall");
-      });
       it("should make original function also callable", function() {
-        this._wffn();
-        return this.wffnSpy.called.should.be["true"];
+        return this.originalArg.should.equal("first function args");
       });
       it("should call function registered by `then` method", function() {
-        var result,
-          _this = this;
-        result = this._wffn;
-        return _([0, 1, 2, 3, 4]).chain().map(function() {
-          return sinon.spy();
-        }).forEach(function(spy, index) {
-          return result = result.then(function(err, inputIndex, callback) {
-            spy(inputIndex);
-            return callback(null, index);
-          });
-        }).then(function() {
-          return _this._wffn(0);
-        }).forEach(function(spy, index) {
-          spy.called.should.be["true"];
-          return spy.calledWith(index).should.be["true"];
-        });
+        this.thenFn1Arg.should.equal("some args");
+        this.thenFn2Arg1.should.equal("args1");
+        return this.thenFn2Arg2.should.equal("args2");
+      });
+      it("should pass in object to callback what not a function", function() {
+        this.thenFn4Arg1.should.equal("straight");
+        this.thenFn4Arg2.should.equal("passin");
+        return this.thenFn4Arg3.should.equal("arguments");
       });
       it("should call function registered by `done` method", function() {
-        var doneSpy, result,
-          _this = this;
-        result = this._wffn;
-        doneSpy = sinon.spy();
-        _([0, 1, 2, 3, 4]).chain().forEach(function() {
-          return result = result.then(function(err, callback) {
-            return callback();
-          });
-        }).then(function() {
-          return result.done(doneSpy);
-        }).then(function() {
-          return _this._wffn();
-        });
-        return doneSpy.called.should.be["true"];
+        return this.doneSpy.calledWith("first function args", "some args", ["args1", "args2"], "some other args", ["straight", "passin", "arguments"]).should.be["true"];
+      });
+      it("should skip when called by empty argument", function() {
+        return this.thenFn5Called.should.be["true"];
       });
       it("should call function registered by `fail` method", function() {
-        var failSpy, result,
-          _this = this;
-        result = this._wffn;
-        failSpy = sinon.spy();
-        _([0, 1, 2, 3, 4]).chain().forEach(function(index) {
-          return result = result.then(function(err, callback) {
-            if (index === 3) {
-              return callback("err");
-            } else {
-              return callback();
-            }
-          });
-        }).then(function() {
-          return result.fail(failSpy);
-        }).then(function() {
-          return _this._wffn();
-        });
-        return failSpy.called.should.be["true"];
+        return this.failSpy.calledWith("some error message").should.be["true"];
       });
       it("should call function registered by `anyway` method when done", function() {
-        var anywaySpy, result,
-          _this = this;
-        result = this._wffn;
-        anywaySpy = sinon.spy();
-        _([0, 1, 2, 3, 4]).chain().forEach(function() {
-          return result = result.then(function(err, callback) {
-            return callback();
-          });
-        }).then(function() {
-          return result.anyway(anywaySpy);
-        }).then(function() {
-          return _this._wffn();
-        });
-        return anywaySpy.called.should.be["true"];
+        return this.anywaySpy1.calledWith(null, "first function args", "some args", ["args1", "args2"], "some other args", ["straight", "passin", "arguments"]).should.be["true"];
       });
       return it("should call function registered by `anyway` method when failed", function() {
-        var anywaySpy, result,
-          _this = this;
-        result = this._wffn;
-        anywaySpy = sinon.spy();
-        _([0, 1, 2, 3, 4]).chain().forEach(function(index) {
-          return result = result.then(function(err, callback) {
-            if (index === 3) {
-              return callback("err");
-            } else {
-              return callback();
-            }
-          });
-        }).then(function() {
-          return result.anyway(anywaySpy);
-        }).then(function() {
-          return _this._wffn();
-        });
-        return anywaySpy.called.should.be["true"];
+        return this.anywaySpy2.calledWith("some error message").should.be["true"];
       });
     });
   });

@@ -1,19 +1,13 @@
 # underscore.waterfall
 
 ```javascript
-_.waterfall(function(err, arg1, callback) {
+_.waterfall(function(arg1, callback) {
   callback("some args")
-}).then(function(err, arg2, callback) {
-  // call at 1st
-  assert(arg2, "some args")
-}).then( /* ... */ ).done(function(err, finalarg, callback) {
-  // call when `thenFn` finish
-  callback()
-}).done( /* ... */ ).fail(function(err, finalarg, callback) {
-  // call when any `thenFn` error
-  callback()
-}).fail( /* ... */ ).anyway(function(err, finalarg, callback) {
-  // call another done or fail
-  callback()
-}).anyway( /* ... */ )
+}).then( /* other function */
+).done( /* call after "then" function finish */
+).fail( /* call when any "then" function error */
+).anyway( /* call another done or fail */
+)("first function args")
 ```
+
+Read [unit test](https://github.com/bolasblack/underscore-waterfall/blob/master/test/spec/tests.coffee) for more info.
