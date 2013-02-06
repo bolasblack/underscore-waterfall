@@ -20,6 +20,7 @@
     "grunt": "~0.4.0a",
     "grunt-cli": "~0.1.1",
     "grunt-contrib-watch": "~0.2.0",
+    "grunt-contrib-coffee": "~0.4.0",
     "grunt-mocha": "https://github.com/kmiyashiro/grunt-mocha/tarball/master"
   }
 }
