@@ -58,3 +58,52 @@ _.mixin
             fn? arguments...
 
     start
+
+  deferred: (fn) ->
+    thens = [] # then handler stack
+    fails = [] # fail handler stack
+    padding = false
+    failed = false
+
+    lastErr = null
+    lastArg = []
+    callback = (err, args...) ->
+      if err
+        lastErr = err
+        failed = true
+        while fails.length
+          failFn = fails.shift()
+          failFn? err
+
+      while thens.length
+        {fn: thenFn, type} = thens.shift()
+        if not failed or type is "anyway"
+          thenFn? args..., callback
+          break
+
+      lastArg = args if padding is "then"
+      padding = false
+
+    promise = ->
+      obj =
+        fail: (fn) ->
+          return _.clone(promise) unless fn
+          if failed then fn(lastErr) else fails.push fn
+          promise()
+
+      _.forEach ["then", "anyway"], (type) ->
+        obj[type] = (fn) ->
+          return promise() unless fn?
+          return promise() if failed and type is "then"
+          unless _(fn).isFunction()
+            fn = funcHolder _(arguments).toArray()
+          if padding
+            thens.push {fn, type}
+          else
+            padding = type
+            fn lastArg..., callback
+          promise()
+
+      obj
+
+    promise().then fn
